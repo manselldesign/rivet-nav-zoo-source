@@ -14,7 +14,9 @@
   is the live site at https://basham.github.io/rivet-2026-06-17/prototype-05/
   (re-checked 2026-09-11 — the older content-ia.md drill-down notes are stale).
   Visual pieces in Figma 1436:242642 (file lA01Bv7AUPkAJmblZoKTpe) plus family
-  tokens: cream #F0E1CC, 280px sidenav, 24px pad, 12px row py, 12px chevrons.
+  tokens: cream #F0E1CC, 350px sidenav, 40px pad, 12px row py, 16px chevrons.
+  Figma hides rvt-header — lockup, search, sibling index, and CTAs all live
+  in the sticky left sidebar (frames 1436:242648 / 1436:244282).
 
   BEHAVIOR (live prototype-05, not v1 / zoo-header)
   -------------------------------------------------
@@ -57,14 +59,11 @@
   /*
     THE DESKTOP BREAKPOINT — one literal, three consumers.
     ------------------------------------------------------
-    1024px is the width at which the left sidenav appears and, below it, the
-    drawer takes over as the only way to navigate the tree (spec 12.2/12.5).
-    Three things have to agree on that number: Tailwind's `lg:` utilities (which
-    carry `lg:block` on the sidenav), the `@media screen(lg)` type-scale blocks
-    below, and the drawer's open-position logic in the app script. So the number
-    lives here once, is fed to Tailwind as `screens.lg`, and is read back by the
-    other two — `screen(lg)` resolves against this config, and the app script
-    builds its matchMedia query from the same global.
+    1024px is the width at which the left sidenav is in-flow and sticky.
+    Below it, the same sidebar opens as an overlay (Figma 393 frame is this
+    rail, not a second Menu & Search header). Tailwind's `lg:` utilities, the
+    `@media screen(lg)` type-scale blocks, and the overlay matchMedia query
+    all share this number.
   */
   const SIDENAV_BREAKPOINT = 1024;
 
@@ -300,7 +299,7 @@
   rvt-body, rvt-header, rvt-main, rvt-breadcrumbs,
   rvt-prototype-header-menu, rvt-prototype-search, rvt-prototype-nav { display:block; }
 
-  /* The search placeholder is T12 — zoo source / drawer: "Search this site". */
+  /* Figma 1436:242656 — "Search the site", body extra-small / #343C42. */
   #site-search::placeholder { color:#343C42; opacity:1; }
 
   /* Skip link: visually hidden until focused. The source ships
@@ -512,183 +511,132 @@
   }
 
   /* =========================================================================
-     FULL-WIDTH HEADER + SIDENAV UNDERNEATH
+     SIDENAV-ONLY CHROME  (Figma 1436:242648 / 1436:244282)
      -------------------------------------------------------------------------
-     User-directed chrome (overrides both Figma-adjacent 5d1140d and NYU's
-     live academics page where the left rail starts at y=0 beside the
-     masthead). Spec 9 already had the masthead full-viewport with the
-     sidenav starting at y=96; 5d1140d pinned the rail from y=0 and grew
-     the header in the remaining column with a matching 325px right spacer.
-     That reading is undone here.
-
-     Layout:
-       - Header is `position: sticky; top: 0; left: 0; right: 0; width: 100%`.
-         No `--sidenav-width` offset, no 325px right spacer. Height is
-         `--header-h` (76px mobile / 80px desktop) with
-         `padding-top/bottom: 16px` and `box-sizing: border-box`. One
-         lockup row with CTAs + Search; Menu on mobile. No header section
-         list — that lives in the sidenav, matching live prototype-05.
-       - Sidenav sits under the header. On interior >=lg it is sticky with
-         `top: var(--header-h)` so it never covers the lockup/Menu bar, and
-         it stays while the main column scrolls. `max-height` (not a forced
-         viewport height) keeps the sticky range large enough that a short
-         page's footer cannot shove the rail up behind the masthead. It
-         stays in flow, so the content column is offset by `--sidenav-width`
-         without a header or footer margin. The cream sidenav/content
-         divider is a 1px `#F0E1CC` `#layout::after` from the top of the
-         main row to its bottom (under the header, to the footer, and the
-         full content height on long pages). The sticky rail is
-         `align-self: flex-start`, so its own `border-r` only paints as
-         tall as the nav items; the layout rule is what keeps the split
-         visible when the item list is short.
-       - Left-anchored: masthead and `#layout` drop `mx-auto max-w-[1600px]`
-         so extra viewport width accrues on the right; left edges do not
-         drift. Header `padding-left` is `--sidenav-pad-x` so the lockup
-         left edge matches sidenav item text (heading + Overview row), not
-         the sidenav *column* at `left: 0`. That same lockup x holds on
-         Home (no rail) so the mark does not jump when navigating to an
-         interior page. `--chrome-gutter` is the header *right* inset only
-         (16px / 40px = the old `px-4 lg:px-10`) so Menu & Search stays
-         balanced; it is not reused on the left.
-       - Sidenav inner L/R stay `--sidenav-pad-x` (the already-equalised
-         column pad). Item L/R padding stays 0, so heading and row text
-         start at that gutter. The lockup is not moved into the sidenav;
-         the header stays full width on top.
-
-     Home has no sidenav — `.has-sidenav` is not applied. Below 1024px the
-     sticky-sidenav media query is off and `hidden` still wins (drawer
-     substitutes, as signed off). Footer is full viewport width under the
-     header; it is a sibling of `rvt-main`, so the sticky rail cannot cover
-     it.
+     rvt-header is hidden. The sticky left rail is the only chrome: lockup,
+     search + Go, prototype-05 sibling index, and CTAs pinned at the bottom.
+     Desktop (>=1024): in-flow 350px column, sticky from y=0, 100vh tall.
+     Mobile: the same rail as a left overlay (Figma 393 is this sidebar, not
+     a compact Menu & Search masthead). A lockup control opens it.
      ========================================================================= */
   :root {
-    --sidenav-width: 280px;
-    --sidenav-pad-x: 24px; /* equal inner L/R; measured from the cream-rule gap */
-    --header-h: 76px;      /* 16 + 44px lockup + 16 */
-    --chrome-gutter: 16px; /* header *right* inset only; former `px-4` */
+    --sidenav-width: 350px;
+    --sidenav-pad-x: 40px;
   }
 
-  rvt-header {
-    position: sticky;
-    top: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    z-index: 20;
-    background: #fff;
-  }
-
-  /* Height lives on the <header> so the cream border stays inside --header-h
-     (76 mobile / 80 desktop) and sticky sidenav `top` stays in lockstep. */
-  rvt-header header {
-    position: relative;
-    height: var(--header-h);
-    padding: 0;
-    box-sizing: border-box;
-  }
-
-  .masthead-inner {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-  }
-
-  .masthead-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    box-sizing: border-box;
-    height: 76px;
-    padding: 16px;
-  }
+  rvt-header { display: none; }
 
   .rvt-lockup__title {
-    font-size: 14px;
-    line-height: 14px;
+    font-size: 16px;
+    line-height: 16px;
     color: #1F2528;
-  }
-
-  /* Lockup `<a>` — Rivet `:where(a)` / `:where(a):hover` on `.rvt-lockup`.
-     Default accent `#900`; hover accent-strong `#6D0808`. Title stays
-     `--rvt-color-theme-text-strong` `#1F2528` (`.rvt-lockup__title`).
-     No underline (`text-decoration: none` on `.rvt-lockup`). No duration. */
-  .masthead-top > a {
-    min-width: 0;
-    overflow: hidden;
-    color: #900;
-    text-decoration: none;
-  }
-  .rvt-lockup__title {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .masthead-top > a:hover {
+
+  #sidenav {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    width: var(--sidenav-width);
+    padding: 40px var(--sidenav-pad-x);
+    background: #fff;
+  }
+
+  .sidenav-lockup {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    min-width: 0;
+    color: #900;
+    text-decoration: none;
+  }
+  .sidenav-lockup:hover {
     color: #6D0808;
     text-decoration: none;
   }
-
-  .masthead-tools {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 16px;
-    flex-shrink: 0;
-    margin-left: auto;
-    z-index: 1;
+  .sidenav-lockup:focus-visible,
+  .sidenav-open:focus-visible,
+  .sidenav-cta:focus-visible,
+  .sidenav-search-go:focus-visible {
+    isolation: isolate;
+    outline: 2px solid #6D0808;
+    outline-offset: 2px;
   }
 
-  .masthead-tool {
+  .sidenav-search {
+    flex-shrink: 0;
+    padding-top: 40px;
+  }
+  .sidenav-search-form {
     display: flex;
     align-items: center;
-    justify-content: center;
-    width: 16px;
-    height: 16px;
-    padding: 0;
-    color: #1F2528;
-    background: transparent;
+    box-sizing: border-box;
+    height: 40px;
+    border: 1px solid #1F2528;
+    padding-left: 12px;
+    gap: 8px;
+  }
+  .sidenav-search-input {
+    min-width: 0;
+    flex: 1;
+    height: 100%;
     border: 0;
+    background: transparent;
+    font-size: 14px;
+    line-height: 20px;
+    font-variation-settings: 'wght' 350, 'wdth' 110;
+    color: #343C42;
+  }
+  .sidenav-search-input:focus {
+    outline: none;
+    box-shadow: none;
+  }
+  .sidenav-search-input:focus-visible {
+    isolation: isolate;
+    outline: 2px solid #6D0808;
+    outline-offset: 2px;
+  }
+  .sidenav-search-go {
+    box-sizing: border-box;
+    height: 40px;
+    width: 54px;
+    flex-shrink: 0;
+    padding: 0 16px;
+    border: 0;
+    background: #1F2528;
+    color: #fff;
+    font-size: 16px;
+    line-height: 24px;
+    font-variation-settings: 'wght' 600, 'wdth' 115;
     cursor: pointer;
   }
-  /* Menu + Search — Rivet `.rvt-button--medium.rvt-button--icon-only`
-     (Normal / 32×32). Hover: text + border → inverse-strong `#000`;
-     fill stays transparent; no underline; no transition. */
-  .masthead-search-btn,
-  #menu-toggle {
-    box-sizing: border-box;
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
-    min-height: 32px;
-    border: 1px solid #1F2528;
-  }
-  .masthead-tool:hover,
-  .masthead-tool:active {
-    color: #000;
-    background-color: transparent;
+  .sidenav-search-go:hover,
+  .sidenav-search-go:active {
+    background-color: #000;
+    color: #fff;
     text-decoration: none;
     box-shadow: none;
   }
-  .masthead-search-btn:hover,
-  .masthead-search-btn:active,
-  #menu-toggle:hover,
-  #menu-toggle:active {
-    border-color: #000;
+
+  #sidenav-nav {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding-top: 40px;
   }
 
-  /* Header CTAs — Rivet `.rvt-button.rvt-button--medium.rvt-button--cta`
-     (Normal / medium / 32px, crimson outline, arrow). Geometry from
-     computed docs: height `--rvt-size-32`; padding-block 5px
-     ((32 − 1lh 20 − 2px border) / 2); padding-inline 13px
-     (5 + `--rvt-spacing-xs` 8); gap `--rvt-spacing-xs`; type
-     `--rvt-font-14-bold` via .t16. Hover: CTA Normal (fill transparent;
-     text/border → accent-strong `#6D0808`). */
-  .masthead-ctas {
-    display: none;
+  .sidenav-ctas {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex-shrink: 0;
+    padding-top: 48px;
   }
   /* Figma 1436:242687 / 242688 — 40px outlined crimson, 12px pad, 8px gap. */
-  .masthead-cta {
+  .sidenav-cta {
     box-sizing: border-box;
     display: flex;
     align-items: center;
@@ -696,14 +644,13 @@
     min-height: 40px;
     padding: 0 12px;
     gap: 8px;
-    flex-shrink: 0;
     color: #990000;
     background-color: transparent;
     border: 1px solid #990000;
     text-decoration: none;
   }
-  .masthead-cta:hover,
-  .masthead-cta:active {
+  .sidenav-cta:hover,
+  .sidenav-cta:active {
     background-color: transparent;
     color: #6D0808;
     border-color: #6D0808;
@@ -711,75 +658,29 @@
     box-shadow: none;
   }
 
-  /* Search field — Rivet `.rvt-header__search-bar input`: no hover rule.
-     `:focus` clears outline/shadow; `:focus-visible` is the global 2px
-     accent-strong ring. Lives in the search drawer, not the masthead. */
-  #search-drawer input[type="search"]:focus {
-    outline: none;
-    box-shadow: none;
-  }
-  #search-drawer input[type="search"]:focus-visible {
-    isolation: isolate;
-    outline: 2px solid #6D0808;
-    outline-offset: 2px;
-  }
-
-  .masthead-primary {
-    display: none;
-  }
-
-  /* Primary header links — Rivet `.rvt-header-menu__item > a`.
-     Default: text-strong `#1F2528`, no underline, transparent bg.
-     :hover / :active on non-current copies sidenav item hover
-     (`hover:underline` on `#sidenav ul a.sidenav-item`): ink color,
-     underline, thickness auto, offset auto, no weight change.
-     Dropdowns omitted. Current (`aria-current="page"` / `.is-current`):
-     accent `#900`, `text-decoration: underline`,
-     `text-underline-offset: 4px`. Weight stays 350; Rivet uses GRAD 150
-     which this font request does not include. Current:hover stays that
-     treatment (already underlined — do not restyle as non-current hover). */
-  .masthead-nav-link {
-    position: relative;
-    padding: 2px 0;
-    font-size: 14px;
-    line-height: 20px;
-    font-variation-settings: 'wght' 350, 'wdth' 115;
-    color: #1F2528;
-    background-color: transparent;
-    text-decoration: none;
-    white-space: nowrap;
-  }
-  .masthead-nav-link:hover,
-  .masthead-nav-link:active {
-    color: #1F2528;
-    background-color: transparent;
-    text-decoration: underline;
-  }
-  .masthead-nav-link.is-current,
-  .masthead-nav-link.is-current:hover,
-  .masthead-nav-link.is-current:active,
-  .masthead-nav-link[aria-current="page"],
-  .masthead-nav-link[aria-current="page"]:hover,
-  .masthead-nav-link[aria-current="page"]:active {
+  /* Mobile: lockup control opens the same sidebar. Not a Menu & Search bar. */
+  .sidenav-open {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 16px;
+    border: 0;
+    border-bottom: 1px solid #F0E1CC;
+    background: #fff;
     color: #900;
-    background-color: transparent;
-    text-decoration: underline;
-    text-underline-offset: 4px;
+    cursor: pointer;
+    text-align: left;
   }
-
-  .masthead-top > a:focus-visible,
-  .masthead-tool:focus-visible,
-  .masthead-cta:focus-visible,
-  .masthead-nav-link:focus-visible {
-    isolation: isolate;
-    outline: 2px solid #6D0808;
-    outline-offset: 2px;
+  .sidenav-open:hover {
+    color: #6D0808;
   }
-
-  #sidenav {
-    width: var(--sidenav-width);
-    padding-left: var(--sidenav-pad-x);
-    padding-right: var(--sidenav-pad-x);
+  body.sidenav-open .sidenav-open {
+    visibility: hidden;
   }
 
   /*
@@ -827,59 +728,49 @@
     position: relative;
   }
 
+  /* Below lg the same sidebar is a left overlay (Figma 393 / 1436:244282).
+     Width stays 350px when it fits; otherwise leave a 48px scrim sliver. */
+  @media (max-width: 1023px) {
+    #sidenav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 50;
+      height: 100%;
+      max-height: 100%;
+      width: min(var(--sidenav-width), calc(100vw - 48px));
+      overflow: hidden;
+      border-right: 1px solid #F0E1CC;
+      transform: translateX(-100%);
+      transition: transform 250ms ease-out;
+    }
+    #sidenav.is-open {
+      transform: translateX(0);
+    }
+  }
+
   @media screen(lg) {
-    :root {
-      --header-h: 80px;      /* 16 + 48 lockup + 16 — no header section row */
-      --chrome-gutter: 40px; /* 16px outer + 24px inner; matches Figma header */
-    }
-
-    .rvt-lockup__title {
-      font-size: 16px;
-      line-height: 16px;
-    }
-
-    .masthead-inner {
-      padding: 16px 16px 0;
-    }
-
-    .masthead-top {
-      height: auto;
-      padding: 0 24px 16px;
-    }
-
-    .masthead-ctas {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    #menu-toggle {
-      display: none;
-    }
-
-    .masthead-primary {
+    .sidenav-open {
       display: none;
     }
     .has-sidenav #sidenav {
       position: sticky;
-      top: var(--header-h);
+      top: 0;
       align-self: flex-start;
-      max-height: calc(100vh - var(--header-h));
-      overflow-y: auto;
+      height: 100vh;
+      max-height: 100vh;
+      overflow: hidden;
       z-index: 10;
     }
+    .has-sidenav #layout {
+      gap: 24px;
+    }
     /*
-      Full-height cream rule at the sidenav's right edge (spec 9: 1px
-      `#F0E1CC` at `calc(var(--sidenav-width) - 1px)`; sampled from 03-…-87690).
+      Full-height cream rule at the sidenav's right edge (1px `#F0E1CC`).
       `#sidenav` stays `align-self: flex-start` so sticky still pins the
-      item list; a min-height of `100vh - header` on the rail would push
-      the in-flow footer down on short pages. This ::after lives on
-      `#layout` instead — `flex-1` already stretches that row to the
-      footer when content is short, and to the content height when it
-      is tall — so the split starts under the masthead, meets the
-      crimson footer, and never scrolls away while the rail is visible.
-      Home has no `.has-sidenav`. Below lg the sidenav is `hidden` and
-      this rule is off.
+      rail; this ::after lives on `#layout` so the split runs the full
+      main-row height (short pages to the footer, long pages with content).
     */
     .has-sidenav #layout::after {
       content: "";
@@ -891,22 +782,9 @@
       background: #F0E1CC;
       pointer-events: none;
     }
-    /*
-      Interior content column only (Home has no .has-sidenav / breadcrumbs).
-      Centers the breadcrumb <ol> (20px) on the sidenav title *text* (20px
-      line), not the title+rule box and not the Back control. Title top is
-      `#sidenav` 24 + optional Back 24 + heading wrap 24. Title text center
-      = title top + 10; crumb top = that − 10. Title `pb-2` (8px to the
-      cream rule) and item row padding do not move the title; re-verify
-      Δ(title text cy − crumb ol cy) ≈ 0 if the title stack changes
-      (one-line or wrapped). `.has-sidenav-back` follows the title when
-      Back is present; pages without a sidenav never get this padding.
-    */
+    /* Figma interior hero text-wrapper starts at y=108 (1436:242703). */
     .has-sidenav .interior-content {
-      padding-top: 24px; /* first sidenav row (sidenav pt-6) */
-    }
-    .has-sidenav.has-sidenav-back .interior-content {
-      padding-top: 72px; /* Back 24 + gap 24 + first row at 72 */
+      padding-top: 108px;
     }
   }
 </style>
@@ -919,11 +797,10 @@
   band on the bottom edge of the viewport on pages too short to fill it, and
   lets it scroll away normally under long ones. The footer itself is never
   `position: fixed`, so it never overlaps content. It is a sibling of
-  `rvt-main` and spans the full viewport under the full-width header; the
-  sticky sidenav is confined to `#layout` inside `rvt-main`, so the crimson
-  band does not slide under the rail. (The drawer, scrim, and skip link ARE
-  fixed overlays; the header is sticky at the top; the interior sidenav is
-  sticky under it.)
+  `rvt-main` and spans the full viewport; the sticky sidenav is confined to
+  `#layout` inside `rvt-main`, so the crimson band does not slide under the
+  rail. (The skip link and mobile sidebar overlay ARE fixed; there is no
+  top masthead — Figma hides rvt-header.)
   The class beats the `display:block` element rule below on specificity.
 -->
 <rvt-body class="flex min-h-screen flex-col">
@@ -931,95 +808,63 @@
   <!-- Verbatim from the source shell; first focusable element in the DOM. -->
   <a class="rvt-skip-link bg-ink px-4 py-3 t14 text-white" href="#main-content">Skip to main content</a>
 
-  <!-- =====================================================================
-       REGION 1 — MASTHEAD
-       Figma rvt-header `1436:242590` (desktop; 16px top / 16px from type → 118px)
-       + mobile 375×76 (16 + 44 lockup + 16). Desktop: lockup, section
-       links, crimson CTAs, search icon. Mobile: lockup, search icon, Menu.
-       Search opens a drawer (zoo v1 panel: trident, close, field + Go).
-       Menu (mobile) opens the existing nav drawer. No inline search field.
-       ===================================================================== -->
-  <rvt-header>
-    <!-- Cream rule is inside --header-h so sticky sidenav `top` stays aligned. -->
-    <header class="masthead w-full border-b border-cream bg-white">
-      <div class="masthead-inner">
-        <div class="masthead-top">
-          <a class="flex h-11 items-center gap-1.5 lg:h-12" href="#/">
-            <span data-icon="trident-tab" class="block h-11 w-[37px] shrink-0 lg:h-12 lg:w-[41px]"></span>
-            <span class="rvt-lockup__title t1">Indiana Zooniversity</span>
-          </a>
-
-          <div class="masthead-tools">
-            <div class="masthead-ctas">
-              <a data-nav href="#/volunteer" class="masthead-cta">
-                <span class="t16">Volunteer at the zoo</span>
-                <span data-icon="arrow-right" class="block size-4 shrink-0"></span>
-              </a>
-              <a data-nav href="#/membership" class="masthead-cta">
-                <span class="t16">Become a member</span>
-                <span data-icon="arrow-right" class="block size-4 shrink-0"></span>
-              </a>
-            </div>
-            <button id="search-toggle" type="button" aria-expanded="false" aria-controls="search-drawer"
-                    class="masthead-tool masthead-search-btn">
-              <span class="sr-only">Search</span>
-              <span data-icon="magnifying-glass" class="block size-4"></span>
-            </button>
-            <button id="menu-toggle" type="button" aria-expanded="false" aria-controls="drawer"
-                    class="masthead-tool">
-              <span class="sr-only">Menu</span>
-              <span data-icon="menu" class="block size-4"></span>
-            </button>
-          </div>
-        </div>
-
-        <!-- prototype-05 has no persistent header section list; nav lives in
-             the sticky sidenav (desktop) and Menu drawer (mobile). -->
-      </div>
-    </header>
-  </rvt-header>
+  <!-- Figma 1436:242700 rvt-header is hidden. Chrome is the left sidebar. -->
+  <rvt-header hidden></rvt-header>
 
   <!-- =====================================================================
        REGIONS 4-7 — PAGE BODY
-       Two columns on interior pages (sidenav 300 | 24 gutter | rule | content),
-       single centred column on Home. spec 9, "Grid".
+       Figma 1436:242647: 350 sidebar | 24 gutter | content. Home also has
+       the rail (Group 72). Below 1024 the same sidebar is an overlay.
        ===================================================================== -->
   <rvt-main class="flex flex-1 flex-col">
+    <button type="button" id="sidenav-open" class="sidenav-open" aria-expanded="false" aria-controls="sidenav">
+      <span data-icon="trident-tab" class="block h-12 w-[41px] shrink-0"></span>
+      <span class="rvt-lockup__title t1">Indiana Zooniversity</span>
+      <span class="sr-only">Open menu</span>
+    </button>
     <div id="layout" class="flex w-full flex-1 items-stretch">
 
       <!--
-        REGION 4 — rvt-sidenav (spec 9). Desktop only; below 1024px the drawer
-        replaces it entirely (spec 12.5).
+        REGION 4 — rvt-sidenav (Figma 1436:242648). Lockup, search, sibling
+        index, and CTAs. Sticky full-height on desktop; same panel as a left
+        overlay below 1024. prototype-05 behavior: parent navigates, current
+        branch expands, no Overview.
 
-        RECONCILED: the real site has NO sidebar nav — it navigates by
-        breadcrumbs plus a contextual header nav. Per the approved scope
-        decision this column is populated from the REAL nav tree at the current
-        page's position, which is exactly what the source's contextual
-        <rvt-prototype-nav> already renders (parent back-link, branch link,
-        sibling/child list). So the Figma sidenav and the source nav turn out to
-        be the same data in a different place; no labels are invented for it.
-
-        Column geometry, measured off frame 3 (`03-…-87690`, exported 1:1): the
-        row rules ran x=40…299 (260px of content behind `pl-10`) and the
-        vertical cream rule sat at x=324 — i.e. 24px of white BETWEEN the nav
-        rows and the divider. Figma column box 40 + 260 + 24 + 1 = 325px;
-        live width is `--sidenav-width`.
-
-        RECONCILED (user chrome): the sidenav sits *under* the full-width
-        masthead (spec 9's y=96, now `--header-h` 80px), sticky at
-        `top: var(--header-h)` on interior >=lg so it stays while main
-        content scrolls without covering the lockup/Menu bar. Inner L/R
-        padding is the equalised 24px `--sidenav-pad-x`; column width is
-        `--sidenav-width` at `left: 0`. The lockup shares that inner pad via the
-        header's `padding-left`, not by sitting inside the rail. The header and
-        footer are full viewport width — only the main column is offset, by
-        keeping the sidenav in flow. Home drops the column entirely (no
-        phantom rail). Below 1024px `hidden` still wins and the drawer
-        substitutes. The vertical cream rule is `#layout::after` at
-        `left: calc(var(--sidenav-width) - 1px)` so it runs the full
-        height of the main row even when the sticky nav list is short.
+        GAP: Figma lists "Conservation & Wildlife Care" as a top-level row.
+        SITE has no such page (top children are Plan Your Visit, Animals &
+        Habitats, Kids & Schools, Events & Activities, Support the Zoo), so
+        the row is omitted rather than linking a fake page.
       -->
-      <nav id="sidenav" class="hidden shrink-0 border-r border-cream pt-6 lg:block"></nav>
+      <nav id="sidenav" class="shrink-0" aria-label="Menu">
+        <a class="sidenav-lockup" data-nav href="#/">
+          <span data-icon="trident-tab" class="block h-12 w-[41px] shrink-0"></span>
+          <span class="rvt-lockup__title t1">Indiana Zooniversity</span>
+        </a>
+        <div class="sidenav-search">
+          <rvt-prototype-search class="block">
+            <search>
+              <form id="site-search-form" action="" class="sidenav-search-form">
+                <label for="site-search" class="sr-only">Search the site</label>
+                <span data-icon="magnifying-glass" class="block size-4 shrink-0 text-ink"></span>
+                <input id="site-search" name="search" type="search" placeholder="Search the site"
+                       class="sidenav-search-input">
+                <button type="submit" class="sidenav-search-go">Go</button>
+              </form>
+            </search>
+          </rvt-prototype-search>
+        </div>
+        <div id="sidenav-nav"></div>
+        <div class="sidenav-ctas">
+          <a data-nav href="#/volunteer" class="sidenav-cta">
+            <span class="t16 flex-1">Work at the Zoo</span>
+            <span data-icon="arrow-right" class="block size-4 shrink-0"></span>
+          </a>
+          <a data-nav href="#/membership" class="sidenav-cta">
+            <span class="t16 flex-1">Become a Member</span>
+            <span data-icon="arrow-right" class="block size-4 shrink-0"></span>
+          </a>
+        </div>
+      </nav>
 
       <main id="main-content" class="min-w-0 flex-1"></main>
     </div>
@@ -1057,109 +902,9 @@
     </div>
   </footer>
 
-  <!-- =====================================================================
-       REGION 9 — DRAWER MENU  (spec 7 + spec 8)
-       75% black scrim + a 533.33px panel docked right (full-bleed on mobile),
-       holding the 6-level drill-down.
-       ===================================================================== -->
+  <!-- Mobile overlay scrim — same sidebar as desktop, not a second drawer. -->
   <div id="scrim" class="pointer-events-none fixed inset-0 z-40 bg-black/75 opacity-0
                          transition-opacity duration-[250ms] ease-out" hidden></div>
-
-  <rvt-prototype-header-menu>
-    <div id="drawer" aria-label="Menu"
-         class="fixed inset-y-0 right-0 z-50 flex w-full translate-x-full flex-col bg-white
-                transition-transform duration-[250ms] ease-out lg:w-[533px]">
-
-      <!-- Drawer header — 96px at both widths, px-24.
-           RECONCILED: spec 8's mobile table says 80px, but the 375px export
-           measures the 40px close button at y=28…68 and the "Menu" cap-line at
-           y=40…55 — both centred on y=48 — and puts the search field at
-           y=96…144, which is where a 96px header with the body's mobile pt-0
-           (also spec 8) leaves it. An 80px header would centre them on 40 and
-           start the search at 80. Measurement wins over the table. -->
-      <div class="flex h-24 shrink-0 items-center justify-between px-6">
-        <!-- RECONCILED (user chrome): Figma's drawer header shows the visible
-             word "Menu" (T7/T8). That label is replaced with the same IU
-             trident-tab mark as the masthead lockup, linked to Home (`#/`).
-             Accessible name is the lockup title "Indiana Zooniversity"
-             (aria-label; the trident is a graphic). Size matches the
-             masthead mark (41×48 at lg / 37×44 below). The 96px header row
-             `items-center`s it with the 40×40 close button. Clicking
-             closes the drawer via the existing `a[data-nav]` handler so
-             Home is visible. Rendered as a link, not a heading: the
-             source's outline is h1 + h2 only (content-ia.md A5). -->
-        <a data-nav href="#/" aria-label="Indiana Zooniversity" class="shrink-0">
-          <span data-icon="trident-tab" class="block h-11 w-[37px] text-crimson lg:h-12 lg:w-[41px]"></span>
-        </a>
-        <button id="drawer-close" type="button"
-                class="nav-btn nav-btn-close border border-ink text-ink">
-          <span data-icon="close" class="block size-4"></span>
-          <span class="sr-only">Menu</span>
-        </button>
-      </div>
-
-      <!-- Drawer body — nav pinned top, CTA pair pinned bottom.
-           Search lives in the masthead (separate Search control), not here. -->
-      <div class="flex min-h-0 flex-1 flex-col justify-between overflow-y-auto px-6 pb-6 lg:pt-4">
-        <div>
-          <!-- Drill-down panel target. One level is mounted at a time; spec 8. -->
-          <rvt-prototype-nav id="drawer-nav" class="block"></rvt-prototype-nav>
-        </div>
-
-        <!-- Bottom CTA pair — spec 7. Outlined crimson, side-by-side from
-             sm (640) through tablet and desktop; stacked below sm.
-             RECONCILED: Figma labels these "Work at the Zoo" / "Become a
-             Member". The source ships the same two-button group on all 216
-             pages reading "Volunteer at the zoo" / "Become a member", pointing
-             at /volunteer and /membership. Source copy and destinations win.
-             Height is 40px (Figma 48) with 40px L/R padding when stacked;
-             side-by-side drops to 24px padding so the longer label still
-             has a gap before the arrow — see .nav-btn-cta. -->
-        <div class="flex flex-col gap-3 pt-12 sm:flex-row">
-          <a data-nav href="#/volunteer"
-             class="nav-btn nav-btn-cta w-full border border-crimson text-crimson sm:flex-1">
-            <span class="t16 flex-1">Volunteer at the zoo</span>
-            <span data-icon="arrow-right" class="block size-4 shrink-0"></span>
-          </a>
-          <a data-nav href="#/membership"
-             class="nav-btn nav-btn-cta w-full border border-crimson text-crimson sm:flex-1">
-            <span class="t16 flex-1">Become a member</span>
-            <span data-icon="arrow-right" class="block size-4 shrink-0"></span>
-          </a>
-        </div>
-      </div>
-    </div>
-  </rvt-prototype-header-menu>
-
-  <!-- Search drawer — zoo v1 panel chrome (trident, close, field + Go).
-       Opened from the masthead search icon at every breakpoint. -->
-  <div id="search-drawer" aria-label="Search"
-       class="fixed inset-y-0 right-0 z-50 flex w-full translate-x-full flex-col bg-white
-              transition-transform duration-[250ms] ease-out lg:w-[533px]">
-    <div class="flex h-24 shrink-0 items-center justify-between px-6">
-      <a data-nav href="#/" aria-label="Indiana Zooniversity" class="shrink-0">
-        <span data-icon="trident-tab" class="block h-11 w-[37px] text-crimson lg:h-12 lg:w-[41px]"></span>
-      </a>
-      <button id="search-drawer-close" type="button"
-              class="nav-btn nav-btn-close border border-ink text-ink">
-        <span data-icon="close" class="block size-4"></span>
-        <span class="sr-only">Search</span>
-      </button>
-    </div>
-    <div class="px-6 pb-6">
-      <rvt-prototype-search class="block">
-        <search>
-          <form id="site-search-form" action="" class="flex h-12 items-center gap-2 border border-ink pl-3">
-            <label for="site-search" class="sr-only">Search this site</label>
-            <span data-icon="magnifying-glass" class="block size-4 shrink-0 text-ink"></span>
-            <input id="site-search" name="search" type="search" placeholder="Search this site"
-                   class="t11 min-w-0 flex-1 bg-transparent text-ink outline-none">
-            <button type="submit" class="nav-btn-go h-12 shrink-0 bg-ink px-4 t14 text-white">Go</button>
-          </form>
-        </search>
-      </rvt-prototype-search>
-    </div>
-  </div>
 
 </rvt-body>
 
@@ -1513,12 +1258,11 @@
      (chevron-down). Other parents get chevron-right. Nested children have
      no chevron. No Overview row. Cream hairlines #F0E1CC, 12px row py.
      ========================================================================= */
-  function renderNavBack(back, variant) {
+  function renderNavBack(back) {
     if (!back) return '';
-    const tall = variant === 'drawer';
     return (
       `<a data-nav href="${href(back.slug)}" ` +
-      `class="nav-btn-back inline-flex ${tall ? 'h-8' : 'h-6'} items-center gap-2 text-ink">` +
+      `class="nav-btn-back inline-flex h-6 items-center gap-2 text-ink">` +
       `<span data-icon="arrow-left" class="block size-3 shrink-0"></span>` +
       `<span class="t16">${esc(back.label)}</span></a>`
     );
@@ -1539,9 +1283,9 @@
         const kind = chevronKind(s, model);
         const chev =
           kind === 'down'
-            ? `<span class="block size-3 shrink-0" aria-hidden="true">${SIDENAV_CHEVRON_DOWN}</span>`
+            ? `<span data-icon="chevron-down" class="block size-4 shrink-0" aria-hidden="true"></span>`
             : kind === 'right'
-              ? `<span class="block size-3 shrink-0" aria-hidden="true">${SIDENAV_CHEVRON}</span>`
+              ? `<span data-icon="chevron-right" class="block size-4 shrink-0" aria-hidden="true"></span>`
               : '';
         const kids = expanded
           ? `<ul>` +
@@ -1565,81 +1309,27 @@
       })
       .join('');
 
-    return renderNavBack(model.back, 'sidenav') + `<div class="${model.back ? 'pt-6' : ''}"><ul>${items}</ul></div>`;
+    return renderNavBack(model.back) + `<div class="${model.back ? 'pt-6' : ''}"><ul>${items}</ul></div>`;
   }
 
   /* =========================================================================
-     DRAWER — same sibling-index as the sidenav. Parent click navigates
-     (and closes). No in-drawer drill, no Overview, no Main menu escape.
+     MOBILE SIDENAV — the same rail as desktop (Figma 1436:244282), not a
+     second Menu & Search header. Overlay + scrim below 1024px.
      ========================================================================= */
-  function renderDrawer() {
-    const nav = document.getElementById('drawer-nav');
-    const slug = currentSlug();
-    if (!slug) return;
-    const model = navModel(slug);
-    const items = model.items
-      .map((s) => {
-        const current = s === model.current;
-        const expanded = s === model.expanded;
-        const kind = chevronKind(s, model);
-        const chev =
-          kind === 'down'
-            ? `<span class="flex size-8 shrink-0 items-center justify-end text-ink" aria-hidden="true">` +
-              `<span data-icon="chevron-down" class="block size-4"></span></span>`
-            : kind === 'right'
-              ? `<span class="flex size-8 shrink-0 items-center justify-end text-ink" aria-hidden="true">` +
-                `<span data-icon="chevron-right" class="block size-4"></span></span>`
-              : '';
-        const kids = expanded
-          ? `<ul>` +
-            (PAGES[s].c || [])
-              .map(
-                (c) =>
-                  `<li>` +
-                  `<a data-nav href="${href(c)}" class="flex w-full items-center py-2 pl-4 t-drawer-item text-ink hover:underline">` +
-                  `<span class="flex-1">${esc(PAGES[c].l)}</span></a></li>`
-              )
-              .join('') +
-            `</ul>`
-          : '';
-        const labelClass = current ? 'text-crimson underline' : 'text-ink';
-        return (
-          `<li class="-mb-px border-y border-cream">` +
-          `<a data-nav href="${href(s)}"${current ? ' aria-current="page"' : ''} ` +
-          `class="flex w-full items-center gap-2 border-0 bg-transparent px-0 py-3 text-left t-drawer-item hover:underline ${labelClass}">` +
-          `<span class="flex-1">${esc(PAGES[s].l)}</span>${chev}</a>${kids}</li>`
-        );
-      })
-      .join('');
-
-    nav.innerHTML =
-      `<nav class="pt-2">` +
-      (model.back ? `<div class="pb-4">${renderNavBack(model.back, 'drawer')}</div>` : '') +
-      `<ul>${items}</ul></nav>`;
-    paintIcons(nav);
-  }
-
-  /* =========================================================================
-     DRAWER OPEN / CLOSE  (spec 7)
-     translateX(100%) <-> translateX(0) over a 250ms ease-out.
-     INVENTED: the Figma file records both end positions but no duration, easing
-     or delay (spec 13.2). 250ms ease-out is a choice, not a measurement.
-     ========================================================================= */
-  const drawer = document.getElementById('drawer');
-  const searchDrawer = document.getElementById('search-drawer');
+  const sidenav = document.getElementById('sidenav');
+  const sidenavNav = document.getElementById('sidenav-nav');
+  const sidenavOpenBtn = document.getElementById('sidenav-open');
   const scrim = document.getElementById('scrim');
-  const toggle = document.getElementById('menu-toggle');
-  const searchToggle = document.getElementById('search-toggle');
   const searchInput = document.getElementById('site-search');
-  let drawerOpen = false;
-  let searchOpen = false;
+  const desktopNav = window.matchMedia('(min-width: 1024px)');
+  let mobileSidenavOpen = false;
 
   function hideScrimIfIdle() {
-    if (drawerOpen || searchOpen) return;
+    if (mobileSidenavOpen) return;
     scrim.classList.add('opacity-0');
     scrim.classList.remove('pointer-events-auto');
     document.body.classList.remove('overflow-hidden');
-    setTimeout(() => { if (!drawerOpen && !searchOpen) scrim.hidden = true; }, 250);
+    setTimeout(() => { if (!mobileSidenavOpen) scrim.hidden = true; }, 250);
   }
 
   function showScrim() {
@@ -1651,67 +1341,39 @@
     document.body.classList.add('overflow-hidden');
   }
 
-  function openDrawer() {
-    closeSearch({ keepScrim: true });
-    renderDrawer();
-
-    drawerOpen = true;
+  function openMobileSidenav() {
+    if (desktopNav.matches) return;
+    mobileSidenavOpen = true;
+    sidenav.classList.add('is-open');
+    document.body.classList.add('sidenav-open');
+    sidenavOpenBtn.setAttribute('aria-expanded', 'true');
     showScrim();
-    requestAnimationFrame(() => {
-      drawer.classList.remove('translate-x-full');
-    });
-    toggle.setAttribute('aria-expanded', 'true');
-    document.getElementById('drawer-close').focus();
+    const lockup = sidenav.querySelector('.sidenav-lockup');
+    if (lockup) lockup.focus();
   }
 
-  function closeDrawer(opts) {
-    if (!drawerOpen) return;
-    drawerOpen = false;
-    drawer.classList.add('translate-x-full');
-    toggle.setAttribute('aria-expanded', 'false');
-    if (!opts || !opts.keepScrim) hideScrimIfIdle();
-    // The panel is translated off-canvas rather than removed, so focus has to
-    // be handed back explicitly — otherwise it stays on the close button, which
-    // is now sitting off-screen. Only reclaim it if it is still inside the
-    // panel, so a click that navigated somewhere keeps whatever focus it set.
-    if (drawer.contains(document.activeElement)) toggle.focus();
+  function closeMobileSidenav() {
+    if (!mobileSidenavOpen) return;
+    mobileSidenavOpen = false;
+    sidenav.classList.remove('is-open');
+    document.body.classList.remove('sidenav-open');
+    sidenavOpenBtn.setAttribute('aria-expanded', 'false');
+    hideScrimIfIdle();
+    if (sidenav.contains(document.activeElement)) sidenavOpenBtn.focus();
   }
 
-  function openSearch() {
-    closeDrawer({ keepScrim: true });
-    searchOpen = true;
-    showScrim();
-    requestAnimationFrame(() => {
-      searchDrawer.classList.remove('translate-x-full');
-    });
-    searchToggle.setAttribute('aria-expanded', 'true');
-    searchInput.focus();
-  }
-
-  function closeSearch(opts) {
-    if (!searchOpen) return;
-    searchOpen = false;
-    searchDrawer.classList.add('translate-x-full');
-    searchToggle.setAttribute('aria-expanded', 'false');
-    if (!opts || !opts.keepScrim) hideScrimIfIdle();
-    if (searchDrawer.contains(document.activeElement)) searchToggle.focus();
-  }
-
-  toggle.addEventListener('click', () => (drawerOpen ? closeDrawer() : openDrawer()));
-  searchToggle.addEventListener('click', () => (searchOpen ? closeSearch() : openSearch()));
-  document.getElementById('drawer-close').addEventListener('click', closeDrawer);
-  document.getElementById('search-drawer-close').addEventListener('click', closeSearch);
-  scrim.addEventListener('click', () => {
-    if (drawerOpen) closeDrawer();
-    if (searchOpen) closeSearch();
+  sidenavOpenBtn.addEventListener('click', () => {
+    mobileSidenavOpen ? closeMobileSidenav() : openMobileSidenav();
   });
-
+  scrim.addEventListener('click', closeMobileSidenav);
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
     const t = e.target;
     if (t && t.tagName === 'INPUT' && t.type === 'search' && t.value.length > 0) return;
-    if (drawerOpen) closeDrawer();
-    else if (searchOpen) closeSearch();
+    if (mobileSidenavOpen) closeMobileSidenav();
+  });
+  desktopNav.addEventListener('change', (e) => {
+    if (e.matches) closeMobileSidenav();
   });
 
   /* Search form — no backend in the prototype; submit is swallowed. */
@@ -1731,7 +1393,6 @@
     return PAGES[slug] ? slug : HOME;
   }
 
-  const sidenav = document.getElementById('sidenav');
   const main = document.getElementById('main-content');
 
   function render() {
@@ -1743,21 +1404,18 @@
 
     const isHome = slug === HOME;
     const model = navModel(slug);
-    sidenav.innerHTML = renderSidenav(slug);
-    sidenav.classList.add('lg:block');
+    sidenavNav.innerHTML = renderSidenav(slug);
     document.body.classList.add('has-sidenav');
     document.body.classList.toggle('has-sidenav-back', !!model.back);
     sidenav.setAttribute('aria-label', isHome ? 'Menu' : PAGES[slug].l);
 
     main.innerHTML = isHome ? renderHome(p) : renderInterior(slug, p);
     paintIcons(main);
-    paintIcons(sidenav);
-
-    if (drawerOpen) renderDrawer();
+    paintIcons(sidenavNav);
   }
 
-  // Any in-app link closes the drawer and scrolls to top; the hash change does
-  // the actual routing. The breadcrumb chip toggles the full trail in place.
+  // Any in-app link closes the mobile sidebar and scrolls to top; the hash
+  // change does the actual routing. The breadcrumb chip toggles the trail.
   document.addEventListener('click', (e) => {
     const crumbBtn = e.target.closest('[data-crumbs-toggle]');
     if (crumbBtn) {
@@ -1777,8 +1435,7 @@
     }
     const a = e.target.closest('a[data-nav]');
     if (!a) return;
-    if (drawerOpen) closeDrawer();
-    if (searchOpen) closeSearch();
+    if (mobileSidenavOpen) closeMobileSidenav();
     if (a.getAttribute('href') === location.hash) { e.preventDefault(); return; }
     window.scrollTo(0, 0);
   });
