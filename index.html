@@ -615,8 +615,14 @@
      No underline (`text-decoration: none` on `.rvt-lockup`). No duration. */
   .masthead-top > a {
     min-width: 0;
+    overflow: hidden;
     color: #900;
     text-decoration: none;
+  }
+  .rvt-lockup__title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .masthead-top > a:hover {
     color: #6D0808;
@@ -630,6 +636,7 @@
     gap: 16px;
     flex-shrink: 0;
     margin-left: auto;
+    z-index: 1;
   }
 
   .masthead-tool {
